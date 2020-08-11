@@ -1,0 +1,30 @@
+#!/bin/env bash
+
+selected="$(
+  xbps-query -R --search= \
+    | sed -Er "s/(\[\*\].*)/$( printf "\033[0;32m" )\1$( printf "\033[0m" )/"\
+      | fzf \
+        --prompt "Package name >" \
+        --layout=reverse \
+        --cycle \
+        -n 2.. \
+        --preview="xq {2}" \
+        --preview-window=down:wrap \
+        --ansi -e -m \
+)"
+while read -r line; do
+  if discard="$(echo "${line}" | grep -q "\[\*\]")"; then
+    UNINSTALL="$UNINSTALL$( echo ${line} | awk '{ print $2 }' ) "
+  else
+    INSTALL="$INSTALL$( echo ${line} | awk '{ print $2 }' ) "
+  fi
+done <<<"${selected}"
+clear
+if [ ! -z ${UNINSTALL} ]; then
+  echo "Executing xbps-remove -R ${UNINSTALL}"
+  xbps-remove -R ${UNINSTALL}
+fi
+if [ ! -z ${INSTALL} ]; then
+  echo "Executing xbps-install -Rs ${INSTALL}"
+  xbps-install -Rs ${INSTALL}
+fi
