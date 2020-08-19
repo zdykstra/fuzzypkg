@@ -11,6 +11,7 @@ selected="$(
         --preview="xq {2}" \
         --preview-window=down:wrap \
         --ansi -e -m \
+        --no-sort
 )"
 while read -r line; do
   if discard="$(echo "${line}" | grep -q "\[\*\]")"; then
