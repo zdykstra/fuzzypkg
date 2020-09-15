@@ -4,8 +4,10 @@ selected="$(
   xbps-query -R --search= \
     | sed -Er "s/(\[\*\].*)/$( printf "\033[0;32m" )\1$( printf "\033[0m" )/"\
       | fzf \
+        --header="[ENTER] Add/Remove selected [TAB] Toggle selection [ALT-F] File list" \
         --prompt "Package name >" \
-        --layout=reverse \
+        --layout=reverse-list \
+        --info=inline \
         --cycle \
         -n 2.. \
         --preview="xq {2}" \
@@ -13,7 +15,8 @@ selected="$(
         --ansi -e -m \
         --border=sharp \
         --marker=M \
-        --no-sort
+        --no-sort \
+        --bind 'alt-f:preview:xbps-query -v -R -f {2}'
 )"
 
 [ -z "${selected}" ] && exit
