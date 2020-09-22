@@ -28,7 +28,8 @@ selected="$(
         --ansi -e -m \
         --border=sharp \
         --no-sort \
-        --bind 'alt-f:preview:xbps-query -v -R -f {2}'
+        --bind 'alt-f:preview:xbps-query -v -R -f {2}' \
+        ${1:+--query "$1"}
 )"
 
 [ -z "${selected}" ] && exit
