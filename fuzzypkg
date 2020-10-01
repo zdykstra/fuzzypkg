@@ -52,7 +52,9 @@ if [ "$(id -u)" -eq 0 ]; then
     xbps-remove -R "${UNINSTALL[@]}"
   fi
   if [ -n "${INSTALL[*]}" ]; then
-    echo "Executing xbps-install -Rs" "${INSTALL[@]}"
-    xbps-install -Rs "${INSTALL[@]}"
+    echo "Executing xbps-install -S" "${INSTALL[@]}"
+    xbps-install -S "${INSTALL[@]}"
   fi
+else
+  echo "Run fuzzypkg as root to add or remove packages"
 fi
