@@ -4,14 +4,16 @@ SHELL="$(command -v bash)"
 
 if command -v fzf > /dev/null 2>&1; then
   FUZZYSEL=fzf
-  #shellcheck disable=SC2034
-  FZF_DEFAULT_OPTS="--inline-info --marker=M"
   HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection [ALT-F] File list [ALT-H] Homepage"
+
+  #shellcheck disable=SC2034
+  export FZF_DEFAULT_OPTS="--inline-info --marker=M"
 elif command -f sk > /dev/null 2>&1; then
   FUZZYSEL=sk
-  #shellcheck disable=SC2034
-  SKIM_DEFAULT_OPTIONS="--inline-info"
   HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection"
+
+  #shellcheck disable=SC2034
+  export SKIM_DEFAULT_OPTIONS="--inline-info"
 else
   echo "Unable to find fuzzy selector [fzf, sk]"
   exit
@@ -23,7 +25,7 @@ selected="$(
     | sed -Er "s/(\[\*\].*)/$( printf "\033[0;32m" )\1$( printf "\033[0m" )/"\
       | "${FUZZYSEL}" \
         --header="${HEADER}" \
-        --prompt "Package name >" \
+        --prompt "Package name > " \
         --layout=reverse-list \
         --cycle \
         --preview="xq {2}" \
