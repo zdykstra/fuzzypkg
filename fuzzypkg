@@ -21,7 +21,7 @@ selected="$(
     | sed -Er "s/(\[\*\].*)/$( printf "\033[0;32m" )\1$( printf "\033[0m" )/"\
       | "${FUZZYSEL}" \
         --header="${HEADER}" \
-        --prompt "Package name > " \
+        --prompt "  Package name > " \
         --layout=reverse-list \
         --cycle \
         --preview="xq {2}" \
