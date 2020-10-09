@@ -44,16 +44,21 @@ while read -r line; do
   fi
 done <<<"${selected}"
 
+UNINSTALL_CMD="xbps-remove -R ${UNINSTALL[*]}"
+INSTALL_CMD="xbps-install -S ${INSTALL[*]}"
+echo ""
+
 if [ "$(id -u)" -eq 0 ]; then
   if [ -n "${UNINSTALL[*]}" ]; then
-    echo "Executing xbps-remove -R " "${UNINSTALL[@]}"
-    xbps-remove -R "${UNINSTALL[@]}"
+    echo "Executing ${UNINSTALL_CMD}"
+    ${UNINSTALL_CMD}
   fi
   if [ -n "${INSTALL[*]}" ]; then
-    echo "Executing xbps-install -S" "${INSTALL[@]}"
-    xbps-install -S "${INSTALL[@]}"
+    echo "Executing ${INSTALL_CMD}"
+    ${INSTALL_CMD}
   fi
 else
-  tput cnorm
-  echo "Run fuzzypkg as root to add or remove packages"
+  echo -e "Run fuzzypkg as root to add or remove packages\n"
+  [ -n "${UNINSTALL[*]}" ] && echo "${UNINSTALL_CMD}"
+  [ -n "${INSTALL[*]}" ] && echo "${INSTALL_CMD}"
 fi
