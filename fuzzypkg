@@ -46,7 +46,16 @@ done <<<"${selected}"
 
 UNINSTALL_CMD="xbps-remove -R ${UNINSTALL[*]}"
 INSTALL_CMD="xbps-install -S ${INSTALL[*]}"
-echo ""
+
+PRIV=""
+if command -v doas > /dev/null 2>&1; then
+  PRIV="doas "
+elif command -v sudo > /dev/null 2>&1; then
+  PRIV="sudo "
+fi
+
+# reset our position in the terminal
+echo -ne ""
 
 if [ "$(id -u)" -eq 0 ]; then
   if [ -n "${UNINSTALL[*]}" ]; then
@@ -58,7 +67,7 @@ if [ "$(id -u)" -eq 0 ]; then
     ${INSTALL_CMD}
   fi
 else
-  echo -e "Run fuzzypkg as root to add or remove packages\n"
-  [ -n "${UNINSTALL[*]}" ] && echo "${UNINSTALL_CMD}"
-  [ -n "${INSTALL[*]}" ] && echo "${INSTALL_CMD}"
+  echo -e "Run fuzzypkg as root to add or remove packages"
+  [ -n "${UNINSTALL[*]}" ] && echo "${PRIV}${UNINSTALL_CMD}"
+  [ -n "${INSTALL[*]}" ] && echo "${PRIV}${INSTALL_CMD}"
 fi
