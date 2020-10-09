@@ -5,14 +5,10 @@ SHELL="$(command -v bash)"
 if command -v fzf > /dev/null 2>&1; then
   FUZZYSEL=fzf
   HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection [ALT-F] File list [ALT-H] Homepage"
-
-  #shellcheck disable=SC2034
   export FZF_DEFAULT_OPTS="--inline-info --marker=M"
 elif command -f sk > /dev/null 2>&1; then
   FUZZYSEL=sk
   HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection"
-
-  #shellcheck disable=SC2034
   export SKIM_DEFAULT_OPTIONS="--inline-info"
 else
   echo "Unable to find fuzzy selector [fzf, sk]"
