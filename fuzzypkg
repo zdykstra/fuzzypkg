@@ -54,5 +54,6 @@ if [ "$(id -u)" -eq 0 ]; then
     xbps-install -S "${INSTALL[@]}"
   fi
 else
+  tput cnorm
   echo "Run fuzzypkg as root to add or remove packages"
 fi
