@@ -1,14 +1,13 @@
 #!/bin/env bash
 # this will be the shell used by fzf to run commands
 SHELL="$(command -v bash)"
+HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection [ALT-F] File list [ALT-H] Homepage"
 
 if command -v fzf > /dev/null 2>&1; then
   FUZZYSEL=fzf
-  HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection [ALT-F] File list [ALT-H] Homepage"
   export FZF_DEFAULT_OPTS="--inline-info --marker=M"
 elif command -f sk > /dev/null 2>&1; then
   FUZZYSEL=sk
-  HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection"
   export SKIM_DEFAULT_OPTIONS="--inline-info"
 else
   echo "Unable to find fuzzy selector [fzf, sk]"
@@ -29,8 +28,8 @@ selected="$(
         --ansi -e -m \
         --border=sharp \
         --no-sort \
-        --bind 'alt-f:preview:xbps-query -v -R -f {2}' \
-        --bind 'alt-h:execute-silent[nohup xdg-open "$(xbps-query -p homepage -R {2})" &]' \
+        --bind "alt-f:execute[ xbps-query -v -R -f {2} | ${FUZZYSEL} --prompt '{2} >' ]" \
+        --bind 'alt-h:execute-silent[ xdg-open "$(xbps-query -p homepage -R {2})" & ]' \
         ${1:+--query "$1"}
 )"
 
