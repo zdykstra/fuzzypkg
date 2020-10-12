@@ -6,7 +6,7 @@ HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection [ALT-F] File list [AL
 if command -v fzf > /dev/null 2>&1; then
   FUZZYSEL=fzf
   export FZF_DEFAULT_OPTS="--inline-info --marker=M"
-elif command -f sk > /dev/null 2>&1; then
+elif command -v sk > /dev/null 2>&1; then
   FUZZYSEL=sk
   export SKIM_DEFAULT_OPTIONS="--inline-info"
 else
