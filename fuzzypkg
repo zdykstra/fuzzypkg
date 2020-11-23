@@ -1,72 +1,101 @@
 #!/bin/env bash
-# this will be the shell used by fzf to run commands
-SHELL="$(command -v bash)"
-HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection [ALT-F] File list [ALT-H] Homepage"
 
-if command -v fzf > /dev/null 2>&1; then
-  FUZZYSEL=fzf
-  export FZF_DEFAULT_OPTS="--inline-info --marker=M"
-elif command -f sk > /dev/null 2>&1; then
-  FUZZYSEL=sk
-  export SKIM_DEFAULT_OPTIONS="--inline-info"
-else
-  echo "Unable to find fuzzy selector [fzf, sk]"
-  exit
-fi
+header_wrap() {
+  local tokens footer
 
-#shellcheck disable=SC2016
-selected="$(
-  xbps-query -R --search= \
-    | sed -Er "s/(\[\*\].*)/$( printf "\033[0;32m" )\1$( printf "\033[0m" )/"\
-      | "${FUZZYSEL}" \
-        --header="${HEADER}" \
-        --prompt "  Package name > " \
-        --layout=reverse-list \
-        --cycle \
-        --preview="xq {2}" \
-        --preview-window=down:wrap \
-        --ansi -e -m \
-        --border=sharp \
-        --no-sort \
-        --bind "alt-f:execute[ xbps-query -v -R -f {2} | ${FUZZYSEL} --prompt '{2} > ' ]" \
-        --bind 'alt-h:execute-silent[ xdg-open "$(xbps-query -p homepage -R {2})" & ]' \
-        ${1:+--query "$1"}
-)"
+  # Nothing to print if there is no header
+  [ $# -gt 0 ] || return
 
-[ -z "${selected}" ] && exit
+  # Encode spaces in tokens so wrap won't break them
+  while [ $# -gt 0 ]; do
+    tokens+=( "${1// /_}" )
+    shift
+  done
 
-while read -r line; do
-  if echo "${line}" | grep -q "\[\*\]" >/dev/null 2>&1; then
-    UNINSTALL+=( "$( echo "${line}" | awk '{ print $2 }' )" )
+  # Pick a wrap width if none was specified
+  [ -n "$wrap_width" ] || wrap_width="$(( $( tput cols ) - 4 ))"
+
+  footer="$( echo -n -e "${tokens[@]}" | fold -s -w "${wrap_width}" )"
+  footer="${footer//\[/\\033\[0;32m\[}"
+  footer="${footer//\]/\]\\033\[0m}"
+  echo -n -e "${footer//_/ }"
+}
+
+main() {
+  # this will be the shell used by fzf to run commands
+  SHELL="$(command -v bash)"
+
+  if command -v fzf > /dev/null 2>&1; then
+    FUZZYSEL=fzf
+    export FZF_DEFAULT_OPTS="--inline-info --marker=M"
+  elif command -f sk > /dev/null 2>&1; then
+    FUZZYSEL=sk
+    export SKIM_DEFAULT_OPTIONS="--inline-info"
   else
-    INSTALL+=( "$( echo "${line}" | awk '{ print $2 }' )" )
+    echo "Unable to find fuzzy selector [fzf, sk]"
+    exit
   fi
-done <<<"${selected}"
 
-UNINSTALL_CMD="xbps-remove -R ${UNINSTALL[*]}"
-INSTALL_CMD="xbps-install -S ${INSTALL[*]}"
+  HEADER="$( header_wrap "[ENTER] Add/Remove selected" "[TAB] Toggle selection" \
+    "[ALT-F] File list" "[ALT-H] Homepage" )"
 
-PRIV=""
-if command -v doas > /dev/null 2>&1; then
-  PRIV="doas "
-elif command -v sudo > /dev/null 2>&1; then
-  PRIV="sudo "
-fi
+  #shellcheck disable=SC2016
+  selected="$(
+    xbps-query -R --search= \
+      | sed -Er "s/(\[\*\].*)/$( printf "\033[0;32m" )\1$( printf "\033[0m" )/"\
+        | "${FUZZYSEL}" \
+          --header="${HEADER}" \
+          --prompt "  Package name > " \
+          --layout=reverse-list \
+          --cycle \
+          --preview="xq {2}" \
+          --preview-window=down:wrap \
+          --ansi -e -m \
+          --border=sharp \
+          --no-sort \
+          --bind "alt-f:execute[ xbps-query -v -R -f {2} | ${FUZZYSEL} --prompt '{2} > ' ]" \
+          --bind 'alt-h:execute-silent[ xdg-open "$(xbps-query -p homepage -R {2})" & ]' \
+          --bind "alt-u:execute[ xbps-install -Sun | ${FUZZYSEL} --prompt 'Available updates > ' ]" \
+          ${1:+--query "$1"}
+  )"
 
-# reset our position in the terminal
-echo -ne ""
+  [ -z "${selected}" ] && exit
 
-if [ "$(id -u)" -eq 0 ]; then
-  if [ -n "${UNINSTALL[*]}" ]; then
-    echo "Executing ${UNINSTALL_CMD}"
-    ${UNINSTALL_CMD}
+  while read -r line; do
+    if echo "${line}" | grep -q "\[\*\]" >/dev/null 2>&1; then
+      UNINSTALL+=( "$( echo "${line}" | awk '{ print $2 }' )" )
+    else
+      INSTALL+=( "$( echo "${line}" | awk '{ print $2 }' )" )
+    fi
+  done <<<"${selected}"
+
+  UNINSTALL_CMD="xbps-remove -R ${UNINSTALL[*]}"
+  INSTALL_CMD="xbps-install -S ${INSTALL[*]}"
+
+  PRIV=""
+  if command -v doas > /dev/null 2>&1; then
+    PRIV="doas "
+  elif command -v sudo > /dev/null 2>&1; then
+    PRIV="sudo "
   fi
-  if [ -n "${INSTALL[*]}" ]; then
-    echo "Executing ${INSTALL_CMD}"
-    ${INSTALL_CMD}
+
+  # reset our position in the terminal
+  echo -ne ""
+
+  if [ "$(id -u)" -eq 0 ]; then
+    if [ -n "${UNINSTALL[*]}" ]; then
+      echo "Executing ${UNINSTALL_CMD}"
+      ${UNINSTALL_CMD}
+    fi
+    if [ -n "${INSTALL[*]}" ]; then
+      echo "Executing ${INSTALL_CMD}"
+      ${INSTALL_CMD}
+    fi
+  else
+    echo -e "Run fuzzypkg as root to add or remove packages"
+    [ -n "${UNINSTALL[*]}" ] && echo "${PRIV}${UNINSTALL_CMD}"
+    [ -n "${INSTALL[*]}" ] && echo "${PRIV}${INSTALL_CMD}"
   fi
-else
-  echo -e "Run fuzzypkg as root to add or remove packages"
-  [ -n "${UNINSTALL[*]}" ] && echo "${PRIV}${UNINSTALL_CMD}"
-  [ -n "${INSTALL[*]}" ] && echo "${PRIV}${INSTALL_CMD}"
-fi
+}
+
+main "$@"
