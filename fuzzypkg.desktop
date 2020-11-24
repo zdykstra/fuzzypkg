@@ -1,0 +1,7 @@
+[Desktop Entry]
+Version=1.0
+Name=fuzzypkg
+Exec=env FDELAY=1 fuzzypkg
+Type=Application
+Terminal=true
+Icon=x-package-repository

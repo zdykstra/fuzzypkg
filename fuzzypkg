@@ -1,5 +1,12 @@
 #!/bin/env bash
 
+delay_exit() {
+  if [ -n "${FDELAY}" ] && ((FDELAY)) ; then
+    echo ""
+    read -n 1 -s -r -p "Press any key to continue"
+  fi
+}
+
 header_wrap() {
   local tokens footer
 
@@ -22,6 +29,8 @@ header_wrap() {
 }
 
 main() {
+  trap delay_exit EXIT
+
   # this will be the shell used by fzf to run commands
   SHELL="$(command -v bash)"
 
@@ -59,7 +68,11 @@ main() {
           ${1:+--query "$1"}
   )"
 
-  [ -z "${selected}" ] && exit
+  # override FDELAY if nothing was selected
+  if [ -z "${selected}" ] ; then
+    FDELAY=0
+    exit
+  fi
 
   while read -r line; do
     if echo "${line}" | grep -q "\[\*\]" >/dev/null 2>&1; then
@@ -82,19 +95,15 @@ main() {
   # reset our position in the terminal
   echo -ne ""
 
-  if [ "$(id -u)" -eq 0 ]; then
-    if [ -n "${UNINSTALL[*]}" ]; then
-      echo "Executing ${UNINSTALL_CMD}"
-      ${UNINSTALL_CMD}
-    fi
-    if [ -n "${INSTALL[*]}" ]; then
-      echo "Executing ${INSTALL_CMD}"
-      ${INSTALL_CMD}
-    fi
-  else
-    echo -e "Run fuzzypkg as root to add or remove packages"
-    [ -n "${UNINSTALL[*]}" ] && echo "${PRIV}${UNINSTALL_CMD}"
-    [ -n "${INSTALL[*]}" ] && echo "${PRIV}${INSTALL_CMD}"
+  if [ -n "${UNINSTALL[*]}" ]; then
+    echo "Executing ${UNINSTALL_CMD}"
+    #shellcheck disable=SC2086
+    ${PRIV}${UNINSTALL_CMD}
+  fi
+  if [ -n "${INSTALL[*]}" ]; then
+    echo "Executing ${INSTALL_CMD}"
+    #shellcheck disable=SC2086
+    ${PRIV} ${INSTALL_CMD}
   fi
 }
 
