@@ -46,7 +46,7 @@ main() {
   fi
 
   HEADER="$( header_wrap "[ENTER] Add/Remove selected" "[TAB] Toggle selection" \
-    "[ALT-F] File list" "[ALT-H] Homepage" )"
+    "[ALT+F] File list" "[ALT+H] Homepage" )"
 
   #shellcheck disable=SC2016
   selected="$(
@@ -64,7 +64,6 @@ main() {
           --no-sort \
           --bind "alt-f:execute[ xbps-query -v -R -f {2} | ${FUZZYSEL} --prompt '{2} > ' ]" \
           --bind 'alt-h:execute-silent[ xdg-open "$(xbps-query -p homepage -R {2})" & ]' \
-          --bind "alt-u:execute[ xbps-install -Sun | ${FUZZYSEL} --prompt 'Available updates > ' ]" \
           ${1:+--query "$1"}
   )"
 
@@ -85,15 +84,16 @@ main() {
   UNINSTALL_CMD="xbps-remove -R ${UNINSTALL[*]}"
   INSTALL_CMD="xbps-install -S ${INSTALL[*]}"
 
-  PRIV=""
-  if command -v doas > /dev/null 2>&1; then
+  if [ "${EUID}" -eq 0 ]; then
+    PRIV=""
+  elif command -v doas > /dev/null 2>&1; then
     PRIV="doas "
   elif command -v sudo > /dev/null 2>&1; then
     PRIV="sudo "
+  else
+    echo "Not executing as root, please install sudo or doas"
+    exit 1
   fi
-
-  # reset our position in the terminal
-  echo -ne ""
 
   if [ -n "${UNINSTALL[*]}" ]; then
     echo "Executing ${UNINSTALL_CMD}"
@@ -107,4 +107,5 @@ main() {
   fi
 }
 
+echo -e "\033]2;$( basename "$0" )\007"
 main "$@"
