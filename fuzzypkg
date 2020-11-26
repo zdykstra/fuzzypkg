@@ -64,7 +64,7 @@ main() {
           --no-sort \
           --bind "alt-f:execute[ xbps-query -v -R -f {2} | ${FUZZYSEL} --prompt '{2} > ' ]" \
           --bind 'alt-h:execute-silent[ xdg-open "$(xbps-query -p homepage -R {2})" & ]' \
-          --bind "alt-u:execute[ xbps-install -Sun | ${FUZZYSEL} --prompt 'Available updates > ' ]" \
+          --bind "alt-u:execute[ xbps-install -SunM | ${FUZZYSEL} --prompt 'Available updates > ' ]" \
           ${1:+--query "$1"}
   )"
 
