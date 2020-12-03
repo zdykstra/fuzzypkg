@@ -86,24 +86,26 @@ main() {
   INSTALL_CMD="xbps-install -S ${INSTALL[*]}"
 
   PRIV=""
-  if command -v doas > /dev/null 2>&1; then
-    PRIV="doas "
-  elif command -v sudo > /dev/null 2>&1; then
-    PRIV="sudo "
+  if [ "$(id -u)" -ne 0 ]; then
+    if command -v doas > /dev/null 2>&1; then
+      PRIV="doas "
+    elif command -v sudo > /dev/null 2>&1; then
+      PRIV="sudo "
+    fi
   fi
 
   # reset our position in the terminal
-  echo -ne ""
+  echo ""
 
   if [ -n "${UNINSTALL[*]}" ]; then
-    echo "Executing ${UNINSTALL_CMD}"
+    echo "Executing ${PRIV}${UNINSTALL_CMD}"
     #shellcheck disable=SC2086
     ${PRIV}${UNINSTALL_CMD}
   fi
   if [ -n "${INSTALL[*]}" ]; then
-    echo "Executing ${INSTALL_CMD}"
+    echo "Executing ${PRIV}${INSTALL_CMD}"
     #shellcheck disable=SC2086
-    ${PRIV} ${INSTALL_CMD}
+    ${PRIV}${INSTALL_CMD}
   fi
 }
 
