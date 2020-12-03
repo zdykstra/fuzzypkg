@@ -109,4 +109,5 @@ main() {
   fi
 }
 
+echo -e "\033]2;$(basename $0)\007"
 main "$@"
