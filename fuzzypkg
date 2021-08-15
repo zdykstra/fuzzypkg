@@ -2,7 +2,9 @@
 
 delay_exit() {
   if [ "${FDELAY}" -gt 0 ] ; then
+    echo -e "\n"
     read -n 1 -s -r -p "Press any key to continue"
+    echo -e "\n"
   fi
 }
 
