@@ -8,27 +8,6 @@ delay_exit() {
   fi
 }
 
-header_wrap() {
-  local tokens footer
-
-  # Nothing to print if there is no header
-  [ $# -gt 0 ] || return
-
-  # Encode spaces in tokens so wrap won't break them
-  while [ $# -gt 0 ]; do
-    tokens+=( "${1// /_}" )
-    shift
-  done
-
-  # Pick a wrap width if none was specified
-  [ -n "$wrap_width" ] || wrap_width="$(( $( tput cols ) - 4 ))"
-
-  footer="$( echo -n -e "${tokens[@]}" | fold -s -w "${wrap_width}" )"
-  footer="${footer//\[/\\033\[0;32m\[}"
-  footer="${footer//\]/\]\\033\[0m}"
-  echo -n -e "${footer//_/ }"
-}
-
 main() {
   trap delay_exit EXIT
   SHELL="$(command -v bash)"
@@ -44,8 +23,11 @@ main() {
     exit
   fi
 
-  HEADER="$( header_wrap "[ENTER] Add/Remove selected" "[TAB] Toggle selection" \
-    "[ALT+F] File list" "[ALT+H] Homepage [ALT+C] Changelog" )"
+  HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection
+[ALT+F] File list [ALT+H] Homepage [ALT+C] Changelog"
+  HEADER="${HEADER//\[/\\033\[0;32m\[}"
+  HEADER="${HEADER//\]/\]\\033\[0m}"
+  HEADER="$( echo -n -e "${HEADER}" )"
 
   #shellcheck disable=SC2016
   selected="$(
@@ -68,21 +50,15 @@ main() {
   )"
 
   # override FDELAY if nothing was selected
-  if [ -z "${selected}" ] ; then
-    FDELAY=0
-    exit
-  fi
+  [ -z "${selected}" ] && FDELAY=0 exit
+
+  installed_re="(\[.\])[ ]([^ ]+)"
 
   while read -r line; do
-    if echo "${line}" | grep -q "\[\*\]" >/dev/null 2>&1; then
-      UNINSTALL+=( "$( echo "${line}" | awk '{ print $2 }' )" )
-    else
-      INSTALL+=( "$( echo "${line}" | awk '{ print $2 }' )" )
+    if [[ ${line} =~ ${installed_re} ]]; then
+      [ "${BASH_REMATCH[1]}" == "[-]" ] && INSTALL+=( "${BASH_REMATCH[2]}" ) || UNINSTALL+=( "${BASH_REMATCH[2]}" )
     fi
   done <<<"${selected}"
-
-  UNINSTALL_CMD="xbps-remove -R ${UNINSTALL[*]}"
-  INSTALL_CMD="xbps-install -S ${INSTALL[*]}"
 
   if [ "${EUID}" -eq 0 ]; then
     PRIV=""
@@ -96,14 +72,16 @@ main() {
   fi
 
   if [ -n "${UNINSTALL[*]}" ]; then
+    UNINSTALL_CMD="xbps-remove -R ${UNINSTALL[*]}"
     echo "Executing ${UNINSTALL_CMD}"
     #shellcheck disable=SC2086
     ${PRIV}${UNINSTALL_CMD}
   fi
   if [ -n "${INSTALL[*]}" ]; then
+    INSTALL_CMD="xbps-install -S ${INSTALL[*]}"
     echo "Executing ${INSTALL_CMD}"
     #shellcheck disable=SC2086
-    ${PRIV} ${INSTALL_CMD}
+    ${PRIV}${INSTALL_CMD}
   fi
 }
 
