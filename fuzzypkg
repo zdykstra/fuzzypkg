@@ -48,7 +48,7 @@ main() {
   fi
 
   HEADER="$( header_wrap "[ENTER] Add/Remove selected" "[TAB] Toggle selection" \
-    "[ALT+F] File list" "[ALT+H] Homepage" )"
+    "[ALT+F] File list" "[ALT+H] Homepage [ALT+C] Changelog" )"
 
   #shellcheck disable=SC2016
   selected="$(
@@ -66,6 +66,7 @@ main() {
           --no-sort \
           --bind "alt-f:execute[ xbps-query -v -R -f {2} | ${FUZZYSEL} --prompt '{2} > ' ]" \
           --bind 'alt-h:execute-silent[ xdg-open "$(xbps-query -p homepage -R {2})" & ]' \
+          --bind 'alt-c:execute-silent[ xdg-open "$(xbps-query -p changelog -R {2})" & ]' \
           ${1:+--query "$1"}
   )"
 
