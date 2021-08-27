@@ -1,5 +1,7 @@
 #!/bin/env bash
 
+configs=( "${HOME}/.fuzzypkg" "${HOME}/.config/fuzzypkg.conf" )
+
 delay_exit() {
   if [ -n "${FDELAY}" ] && [ "${FDELAY}" -gt 0 ] ; then
     echo -e "\n"
@@ -11,6 +13,16 @@ delay_exit() {
 main() {
   trap delay_exit EXIT
   SHELL="$(command -v bash)"
+
+  CL_KEY="alt-c" ; HP_KEY="alt-h" ;FL_KEY="alt-f"
+
+  for config in "${configs[@]}" ; do
+    if [ -f "${config}" ] ; then
+      #shellcheck disable=SC1090
+      source "${config}"
+      break
+    fi
+  done
 
   if command -v fzf > /dev/null 2>&1; then
     FUZZYSEL=fzf
@@ -24,7 +36,7 @@ main() {
   fi
 
   HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection
-[ALT+F] File list [ALT+H] Homepage [ALT+C] Changelog"
+[${FL_KEY^^}] File list [${HP_KEY^^}] Homepage [${CL_KEY^^}] Changelog"
   HEADER="${HEADER//\[/\\033\[0;32m\[}"
   HEADER="${HEADER//\]/\]\\033\[0m}"
   HEADER="$( echo -n -e "${HEADER}" )"
@@ -43,9 +55,9 @@ main() {
           --ansi -e -m \
           --border=sharp \
           --no-sort \
-          --bind "alt-f:execute[ xbps-query -v -R -f {2} | ${FUZZYSEL} --prompt '{2} > ' ]" \
-          --bind 'alt-h:execute-silent[ xdg-open "$(xbps-query -p homepage -R {2})" & ]' \
-          --bind 'alt-c:execute-silent[ xdg-open "$(xbps-query -p changelog -R {2})" & ]' \
+          --bind "${FL_KEY}:execute[ xbps-query -v -R -f {2} | ${FUZZYSEL} --prompt '{2} > ' ]" \
+          --bind "${HP_KEY}:execute-silent[ xbps-query -p homepage -R '{2}' | xargs -Iurl xdg-open url & ]" \
+          --bind "${CL_KEY}:execute-silent[ xbps-query -p changelog -R '{2}'| xargs -Iurl xdg-open url & ]" \
           ${1:+--query "$1"}
   )"
 
@@ -84,6 +96,39 @@ main() {
     ${PRIV}${INSTALL_CMD}
   fi
 }
+
+usage() {
+  cat <<EOF
+Usage: $0 search term
+
+Create a configuration file at one of ( ${configs[*]} ).
+
+Example:
+
+# Changelog key
+CL_KEY="alt-c"
+
+# Homepage key
+HP_KEY="alt-h"
+
+# Filelist key
+FL_KEY="alt-f"
+
+See 'man fzf' for more keybind documentation.
+
+EOF
+}
+
+while getopts "h" opt ; do
+  case "${opt}" in
+    h|?)
+      usage
+      exit
+      ;;
+    *)
+      ;;
+  esac
+done
 
 echo -n -e "\033]2;$( basename "$0" )\007"
 main "$@"
