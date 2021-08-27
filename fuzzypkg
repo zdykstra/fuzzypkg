@@ -110,11 +110,11 @@ main() {
 
 usage() {
   cat <<EOF
-Usage: $0 search term
+Usage: ${BASH_ARGV0##*/} search term
 
 Create a configuration file at one of:
 
-$( for config in "${configs[@]}" ; do echo -e "  ${config}" ; done )
+$( for config in "${configs[@]}" ; do echo -e "  \033[0;32m${config}\033[0m" ; done )
 
 Example:
 
@@ -146,5 +146,5 @@ while getopts "h" opt ; do
   esac
 done
 
-echo -n -e "\033]2;$( basename "$0" )\007"
+echo -n -e "\033]2;${BASH_ARGV0##*/}\007"
 main "$@"
