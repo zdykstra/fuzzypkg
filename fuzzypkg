@@ -32,6 +32,8 @@ main() {
     fi
   done
 
+  [ -z "$HIDE_HEADER" ] && SHOW_HEADER=1
+
 
   if command -v fzf > /dev/null 2>&1; then
     FUZZYSEL=fzf
@@ -55,7 +57,7 @@ main() {
     xbps-query -R --search= \
       | sed -Er "s/(\[\*\].*)/$( printf "\033[0;32m" )\1$( printf "\033[0m" )/"\
         | "${FUZZYSEL}" \
-          --header="${HEADER}" \
+          ${SHOW_HEADER:+--header="${HEADER}"} \
           --prompt "  Package name > " \
           --layout=reverse-list \
           --cycle \
@@ -124,6 +126,9 @@ HP_KEY="alt-h"
 
 # Filelist key
 FL_KEY="alt-f"
+
+# Hide header that shows keybinds
+HIDE_HEADER=1
 
 See 'man fzf' for more keybind documentation.
 
