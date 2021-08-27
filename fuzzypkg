@@ -1,6 +1,14 @@
 #!/bin/env bash
 
-configs=( "${HOME}/.fuzzypkg" "${HOME}/.config/fuzzypkg.conf" )
+# Set a bunch of config test paths
+if [ -n "${XDG_CONFIG_DIR}" ] ; then
+ IFS=':' read -ra configs <<<"${XDG_CONFIG_DIR}"
+ for (( i=0; i<${#configs[@]}; i++)) do
+   configs[$i]="${configs[$i]}/fuzzypkg.conf"
+  done
+fi
+
+configs+=( "${HOME}/.fuzzypkg.conf" "${HOME}/.config/fuzzypkg.conf" )
 
 delay_exit() {
   if [ -n "${FDELAY}" ] && [ "${FDELAY}" -gt 0 ] ; then
@@ -23,6 +31,7 @@ main() {
       break
     fi
   done
+
 
   if command -v fzf > /dev/null 2>&1; then
     FUZZYSEL=fzf
@@ -101,7 +110,9 @@ usage() {
   cat <<EOF
 Usage: $0 search term
 
-Create a configuration file at one of ( ${configs[*]} ).
+Create a configuration file at one of:
+
+$( for config in "${configs[@]}" ; do echo -e "  ${config}" ; done )
 
 Example:
 
