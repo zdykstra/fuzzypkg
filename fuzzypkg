@@ -11,6 +11,7 @@ fi
 configs+=( "${HOME}/.fuzzypkg.conf" "${HOME}/.config/fuzzypkg.conf" )
 
 delay_exit() {
+  printf "\033]0;\a"
   if [ -n "${FDELAY}" ] && [ "${FDELAY}" -gt 0 ] ; then
     echo -e "\n"
     read -n 1 -s -r -p "Press any key to continue"
