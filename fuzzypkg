@@ -19,11 +19,20 @@ delay_exit() {
   fi
 }
 
+colorize() {
+  local string
+  string="${1//\[/\\033\[0;32m\[}"
+  string="${string//\]/\]\\033\[0m}"
+  echo -n -e "${string}"
+}
+
 main() {
   trap delay_exit EXIT
   SHELL="$(command -v bash)"
 
-  CL_KEY="alt-c" ; HP_KEY="alt-h" ;FL_KEY="alt-f"
+  CL_KEY="alt-c" ; HP_KEY="alt-h" ; FL_KEY="alt-f"
+  EX_KEY="alt-e" ; FP_KEY="alt-p"
+  FILE_PREVIEW=( "bat" "-f" )
 
   for config in "${configs[@]}" ; do
     if [ -f "${config}" ] ; then
@@ -47,11 +56,9 @@ main() {
     exit
   fi
 
-  HEADER="[ENTER] Add/Remove selected [TAB] Toggle selection
-[${FL_KEY^^}] File list [${HP_KEY^^}] Homepage [${CL_KEY^^}] Changelog"
-  HEADER="${HEADER//\[/\\033\[0;32m\[}"
-  HEADER="${HEADER//\]/\]\\033\[0m}"
-  HEADER="$( echo -n -e "${HEADER}" )"
+  HEADER=$( colorize "[ENTER] Add/Remove selected [TAB] Toggle selection
+[${FL_KEY^^}] File list [${HP_KEY^^}] Homepage [${CL_KEY^^}] Changelog" )
+  FHEADER=$( colorize "[${FP_KEY^^}] File preview [${EX_KEY^^}] Extract files" )
 
   #shellcheck disable=SC2016
   selected="$(
@@ -67,9 +74,25 @@ main() {
           --ansi -e -m \
           --border=sharp \
           --no-sort \
-          --bind "${FL_KEY}:execute[ xbps-query -v -R -f {2} | ${FUZZYSEL} --prompt '{2} > ' ]" \
           --bind "${HP_KEY}:execute-silent[ xbps-query -p homepage -R '{2}' | xargs -Iurl xdg-open url & ]" \
           --bind "${CL_KEY}:execute-silent[ xbps-query -p changelog -R '{2}'| xargs -Iurl xdg-open url & ]" \
+          --bind "${FL_KEY}:execute:
+              xbps-query -R -f {2} | ${FUZZYSEL} \
+              --prompt '{2} > ' \
+              --multi \
+              --marker=\"E\" \
+              ${SHOW_HEADER:+--header=\"${FHEADER}\"} \
+              --preview-window=down:wrap:hidden \
+              --preview \"xbps-query -R --cat \{1} {2} | ${FILE_PREVIEW[*]}\" \
+              --bind \"${FP_KEY}:toggle-preview\" \
+              --bind \"${EX_KEY}:execute-silent[\
+                  while IFS= read -r line; do
+                    tree=\"\\\${line%/*}\"
+                    mkdir -p \"\\\${tree#*/}\"
+                    xbps-query -R --cat \"\\\${line}\" {2} > \"\\\${line#*/}\"
+                  done < \"\{+f}\"
+                  ]\" \
+          " \
           ${1:+--query "$1"}
   )"
 
