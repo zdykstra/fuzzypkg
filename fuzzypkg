@@ -1,10 +1,11 @@
 #!/bin/env bash
+# vim: softtabstop=2 shiftwidth=2 expandtab
 
 # Set a bunch of config test paths
 if [ -n "${XDG_CONFIG_DIR}" ] ; then
- IFS=':' read -ra configs <<<"${XDG_CONFIG_DIR}"
- for (( i=0; i<${#configs[@]}; i++)) do
-   configs[$i]="${configs[$i]}/fuzzypkg.conf"
+  IFS=':' read -ra configs <<<"${XDG_CONFIG_DIR}"
+  for (( i=0; i<${#configs[@]}; i++)) do
+    configs[$i]="${configs[$i]}/fuzzypkg.conf"
   done
 fi
 
@@ -44,7 +45,6 @@ main() {
 
   [ -z "$HIDE_HEADER" ] && SHOW_HEADER=1
 
-
   if command -v fzf > /dev/null 2>&1; then
     FUZZYSEL=fzf
     export FZF_DEFAULT_OPTS="--inline-info --marker=M"
@@ -63,37 +63,38 @@ main() {
   #shellcheck disable=SC2016
   selected="$(
     xbps-query -R --search= \
-      | sed -Er "s/(\[\*\].*)/$( printf "\033[0;32m" )\1$( printf "\033[0m" )/"\
-        | "${FUZZYSEL}" \
-          ${SHOW_HEADER:+--header="${HEADER}"} \
-          --prompt "  Package name > " \
-          --layout=reverse-list \
-          --cycle \
-          --preview="xq {2}" \
-          --preview-window=down:wrap \
-          --ansi -e -m \
-          --border=sharp \
-          --no-sort \
-          --bind "${HP_KEY}:execute-silent[ xbps-query -p homepage -R '{2}' | xargs -Iurl xdg-open url & ]" \
-          --bind "${CL_KEY}:execute-silent[ xbps-query -p changelog -R '{2}'| xargs -Iurl xdg-open url & ]" \
-          --bind "${FL_KEY}:execute:
-              xbps-query -R -f {2} | ${FUZZYSEL} \
-              --prompt '{2} > ' \
-              --multi \
-              --marker=\"E\" \
-              ${SHOW_HEADER:+--header=\"${FHEADER}\"} \
-              --preview-window=down:wrap:hidden \
-              --preview \"xbps-query -R --cat \{1} {2} | ${FILE_PREVIEW[*]}\" \
-              --bind \"${FP_KEY}:toggle-preview\" \
-              --bind \"${EX_KEY}:execute-silent[\
-                  while IFS= read -r line; do
-                    tree=\"\\\${line%/*}\"
-                    mkdir -p \"\\\${tree#*/}\"
-                    xbps-query -R --cat \"\\\${line}\" {2} > \"\\\${line#*/}\"
-                  done < \"\{+f}\"
-                  ]\" \
-          " \
-          ${1:+--query "$1"}
+    | sed -Er "s/(\[\*\].*)/$( printf "\033[0;32m" )\1$( printf "\033[0m" )/"\
+    | "${FUZZYSEL}" \
+      ${SHOW_HEADER:+--header="${HEADER}"} \
+        --prompt "  Package name > " \
+        --layout=reverse-list \
+        --cycle \
+        --preview="xq {2}" \
+        --preview-window=down:wrap \
+        --ansi -e -m \
+        --border=sharp \
+        --no-sort \
+        --bind "${HP_KEY}:execute-silent[ xbps-query -p homepage -R '{2}' | xargs -Iurl xdg-open url & ]" \
+        --bind "${CL_KEY}:execute-silent[ xbps-query -p changelog -R '{2}'| xargs -Iurl xdg-open url & ]" \
+        --bind "${FL_KEY}:execute:
+          xbps-query -R -f {2} \
+          | ${FUZZYSEL} \
+            ${SHOW_HEADER:+--header=\"${FHEADER}\"} \
+            --prompt '{2} > ' \
+            --multi \
+            --marker=\"E\" \
+            --preview-window=down:wrap:hidden \
+            --preview \"xbps-query -R --cat \{1} {2} | ${FILE_PREVIEW[*]}\" \
+            --bind \"${FP_KEY}:toggle-preview\" \
+            --bind \"${EX_KEY}:execute-silent[\
+              while IFS= read -r line; do
+                tree=\"\\\${line%/*}\"
+                mkdir -p \"\\\${tree#*/}\"
+                xbps-query -R --cat \"\\\${line}\" {2} > \"\\\${line#*/}\"
+              done < \"\{+f}\"
+            ]\" \
+        " \
+        ${1:+--query "$1"}
   )"
 
   # override FDELAY if nothing was selected
