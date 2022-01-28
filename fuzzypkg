@@ -78,7 +78,7 @@ main() {
           xbps-query -R -f {2} \
           | ${FUZZYSEL} \
             ${SHOW_HEADER:+--header=\"${FHEADER}\"} \
-            --prompt '{2} > ' \
+            --prompt '  {2} > ' \
             --marker=\"E\" \
             --preview \"xbps-query -R --cat \{1} {2} | ${FILE_PREVIEW[*]}\" \
             --preview-window=\"down:wrap:hidden:${PREVIEW_BORDER:-border-sharp}\" \
