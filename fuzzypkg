@@ -47,7 +47,12 @@ main() {
 
   if command -v fzf > /dev/null 2>&1; then
     FUZZYSEL=fzf
-    export FZF_DEFAULT_OPTS="--inline-info --marker=M"
+    fuzzy_default_options=(
+      "--inline-info" "--cycle" "--ansi" "-e" "-m"
+      "--no-sort" "--layout=reverse-list"
+      "--border=${BORDER:-sharp}"
+    )
+    export FZF_DEFAULT_OPTS="${fuzzy_default_options[*]}"
   else
     echo "Unable to find 'fzf' fuzzy finder"
     exit
@@ -64,13 +69,9 @@ main() {
     | "${FUZZYSEL}" \
       ${SHOW_HEADER:+--header="${HEADER}"} \
         --prompt "  Package name > " \
-        --layout=reverse-list \
-        --cycle \
+        --marker="M" \
         --preview="xq {2}" \
-        --preview-window=down:wrap \
-        --ansi -e -m \
-        --border=sharp \
-        --no-sort \
+        --preview-window="down:wrap:${PREVIEW_BORDER:-border-sharp}" \
         --bind "${HP_KEY}:execute-silent[ xbps-query -p homepage -R '{2}' | xargs -Iurl xdg-open url & ]" \
         --bind "${CL_KEY}:execute-silent[ xbps-query -p changelog -R '{2}'| xargs -Iurl xdg-open url & ]" \
         --bind "${FL_KEY}:execute:
@@ -78,10 +79,9 @@ main() {
           | ${FUZZYSEL} \
             ${SHOW_HEADER:+--header=\"${FHEADER}\"} \
             --prompt '{2} > ' \
-            --multi \
             --marker=\"E\" \
-            --preview-window=down:wrap:hidden \
             --preview \"xbps-query -R --cat \{1} {2} | ${FILE_PREVIEW[*]}\" \
+            --preview-window=\"down:wrap:hidden:${PREVIEW_BORDER:-border-sharp}\" \
             --bind \"${FP_KEY}:toggle-preview\" \
             --bind \"${EX_KEY}:execute-silent[\
               while IFS= read -r line; do
@@ -157,6 +157,12 @@ EX_KEY="alt-e"
 
 # File preview helper - this must be able to detect binary data and NOT display it! 
 FILE_PREVIEW=( "bat" "-f" )
+
+# FZF border style
+BORDER="sharp"
+
+# FZF preview border style
+PREVIEW_BORDER="border-top"
 
 # Hide header that shows keybinds
 HIDE_HEADER=1
