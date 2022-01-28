@@ -48,11 +48,8 @@ main() {
   if command -v fzf > /dev/null 2>&1; then
     FUZZYSEL=fzf
     export FZF_DEFAULT_OPTS="--inline-info --marker=M"
-  elif command -f sk > /dev/null 2>&1; then
-    FUZZYSEL=sk
-    export SKIM_DEFAULT_OPTIONS="--inline-info"
   else
-    echo "Unable to find fuzzy selector [fzf, sk]"
+    echo "Unable to find 'fzf' fuzzy finder"
     exit
   fi
 
