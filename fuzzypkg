@@ -43,7 +43,11 @@ main() {
     fi
   done
 
-  [ -z "$HIDE_HEADER" ] && SHOW_HEADER=1
+  [ -z "${HIDE_HEADER}" ] && SHOW_HEADER=1
+
+  if [ -z "${XQ_BIN}" ] ; then
+    XQ_BIN="xq"
+  fi
 
   if command -v fzf > /dev/null 2>&1; then
     FUZZYSEL=fzf
@@ -70,7 +74,7 @@ main() {
       ${SHOW_HEADER:+--header="${HEADER}"} \
         --prompt "  Package name > " \
         --marker="M" \
-        --preview="xq {2}" \
+        --preview="${XQ_BIN} {2}" \
         --preview-window="down:wrap:${PREVIEW_BORDER:-border-sharp}" \
         --bind "${HP_KEY}:execute-silent[ xbps-query -p homepage -R '{2}' | xargs -Iurl xdg-open url & ]" \
         --bind "${CL_KEY}:execute-silent[ xbps-query -p changelog -R '{2}'| xargs -Iurl xdg-open url & ]" \
@@ -166,6 +170,9 @@ PREVIEW_BORDER="border-top"
 
 # Hide header that shows keybinds
 HIDE_HEADER=1
+
+# Change the location of the 'xq' binary
+XQ_BIN=/bin/xq
 
 See 'man fzf' for more keybind documentation.
 
