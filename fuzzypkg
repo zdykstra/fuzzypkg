@@ -96,7 +96,6 @@ main() {
         --marker="M" \
         --no-separator \
         --border-label=" Available Packages " \
-        --bind pgup:preview-up,pgdn:preview-down \
         --preview="${XQ_BIN} {2}" \
         --preview-window="down:wrap:${PREVIEW_BORDER:-border-sharp}" \
         --preview-label=" Package Details " \
