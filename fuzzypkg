@@ -27,6 +27,20 @@ colorize() {
   echo -n -e "${string}"
 }
 
+column_wrap() {
+  local footer max lpad pad
+  footer="$( echo -e "${1}" | column -t -s ':' )"
+
+  COLS="$( tput cols )"
+  max="$( echo -e "${footer}" | awk 'BEGIN{l=0} length>l {l=length}; END{print l}' )"
+  lpad="$(( (COLS - max - 3) / 2 ))"
+  [[ ${lpad} -gt 0 ]] && printf -v pad "%*s" "${lpad}" ''
+  footer="${footer//\[/\\033\[0;32m\[}"
+  footer="${footer//\]/\]\\033\[0m}"
+  echo -e "${footer//^/${pad}}"
+}
+
+
 main() {
   trap delay_exit EXIT
   SHELL="$(command -v bash)"
@@ -62,9 +76,12 @@ main() {
     exit
   fi
 
-  HEADER=$( colorize "[ENTER] Add/Remove selected [TAB] Toggle selection
-[${FL_KEY^^}] File list [${HP_KEY^^}] Homepage [${CL_KEY^^}] Changelog" )
-  FHEADER=$( colorize "[${FP_KEY^^}] File preview [${EX_KEY^^}] Extract files" )
+  HEADER="$( column_wrap "\
+^:
+^[${FL_KEY^^}] List package contents:[${HP_KEY^^}] Open homepage:[${CL_KEY^^}] Open changelog
+^[ENTER] Add/Remove selected::[TAB] Toggle selection ")"
+
+  FHEADER="$( column_wrap "^[${FP_KEY^^}] File preview:[${EX_KEY^^}] Extract files" )"
 
   #shellcheck disable=SC2016
   selected="$(
@@ -74,8 +91,12 @@ main() {
       ${SHOW_HEADER:+--header="${HEADER}"} \
         --prompt "  Package name > " \
         --marker="M" \
+        --no-separator \
+        --border-label=" Available Packages " \
+        --bind pgup:preview-up,pgdn:preview-down \
         --preview="${XQ_BIN} {2}" \
         --preview-window="down:wrap:${PREVIEW_BORDER:-border-sharp}" \
+        --preview-label=" Package Details " \
         --bind "${HP_KEY}:execute-silent[ xbps-query -p homepage -R '{2}' | xargs -Iurl xdg-open url & ]" \
         --bind "${CL_KEY}:execute-silent[ xbps-query -p changelog -R '{2}'| xargs -Iurl xdg-open url & ]" \
         --bind "${FL_KEY}:execute:
@@ -84,16 +105,18 @@ main() {
             ${SHOW_HEADER:+--header=\"${FHEADER}\"} \
             --prompt '  {2} > ' \
             --marker=\"E\" \
+            --border-label=\" Package Contents \" \
+            --bind pgup:preview-up,pgdn:preview-down \
             --preview \"xbps-query -R --cat \{1} {2} | ${FILE_PREVIEW[*]}\" \
             --preview-window=\"down:wrap:hidden:${PREVIEW_BORDER:-border-sharp}\" \
+            --preview-label=\" File Preview \" \
             --bind \"${FP_KEY}:toggle-preview\" \
-            --bind \"${EX_KEY}:execute-silent[\
-              while IFS= read -r line; do
-                tree=\"\\\${line%/*}\"
-                mkdir -p \"\\\${tree#*/}\"
-                xbps-query -R --cat \"\\\${line}\" {2} > \"\\\${line#*/}\"
-              done < \"\{+f}\"
-            ]\" \
+            --bind \"${EX_KEY}:execute-silent[ \
+              while IFS= read -r line; do \
+                tree=\"\\\${line%/*}\" ;\
+                mkdir -p \"\\\${tree#*/}\" ;\
+                xbps-query -R --cat \"\\\${line}\" {2} > \"\\\${line#*/}\" ;\
+              done < \"\{+f}\" ]\" \
         " \
         ${1:+--query "$1"}
   )"
