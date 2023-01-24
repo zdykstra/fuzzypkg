@@ -82,7 +82,9 @@ main() {
 ^[${FL_KEY^^}] List package contents:[${HP_KEY^^}] Open homepage:[${CL_KEY^^}] Open changelog
 ^[ENTER] Add/Remove selected::[TAB] Toggle selection ")"
 
-  FHEADER="$( column_wrap "^[${FP_KEY^^}] File preview:[${EX_KEY^^}] Extract files" )"
+  FHEADER="$( column_wrap "\
+^:
+^[${FP_KEY^^}] File preview:[${EX_KEY^^}] Extract files" )"
 
   #shellcheck disable=SC2016
   selected="$(
@@ -106,6 +108,7 @@ main() {
             ${SHOW_HEADER:+--header=\"${FHEADER}\"} \
             --prompt '  {2} > ' \
             --marker=\"E\" \
+            --no-separator \
             --border-label=\" Package Contents \" \
             --bind pgup:preview-up,pgdn:preview-down \
             --preview \"xbps-query -R --cat \{1} {2} | ${FILE_PREVIEW[*]}\" \
