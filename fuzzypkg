@@ -47,7 +47,7 @@ main() {
   SHELL="$(command -v bash)"
 
   CL_KEY="alt-c" ; HP_KEY="alt-h" ; FL_KEY="alt-f"
-  EX_KEY="alt-e" ; FP_KEY="alt-p"
+  EX_KEY="alt-e" ; FP_KEY="alt-p" ; TL_KEY="alt-t"
   FILE_PREVIEW=( "bat" "-f" )
 
   for config in "${configs[@]}" ; do
@@ -80,7 +80,7 @@ main() {
   HEADER="$( column_wrap "\
 ^:
 ^[${FL_KEY^^}] List package contents:[${HP_KEY^^}] Open homepage:[${CL_KEY^^}] Open changelog
-^[ENTER] Add/Remove selected::[TAB] Toggle selection ")"
+^[ENTER] Add/Remove selected:[${TL_KEY^^}] Open template:[TAB] Toggle selection ")"
 
   FHEADER="$( column_wrap "\
 ^:
@@ -101,6 +101,7 @@ main() {
         --preview-label=" Package Details " \
         --bind "${HP_KEY}:execute-silent[ xbps-query -p homepage -R '{2}' | xargs -Iurl xdg-open url & ]" \
         --bind "${CL_KEY}:execute-silent[ xbps-query -p changelog -R '{2}'| xargs -Iurl xdg-open url & ]" \
+        --bind "${TL_KEY}:execute-silent[ xbps-query -p pkgname -R '{2}' | xargs -I pkgname xdg-open https://github.com/void-linux/void-packages/tree/master/srcpkgs/pkgname & ]" \
         --bind "${FL_KEY}:execute:
           xbps-query -R -f {2} \
           | ${FUZZYSEL} \
@@ -175,6 +176,9 @@ CL_KEY="alt-c"
 
 # Homepage key
 HP_KEY="alt-h"
+
+# Template key
+TL_KEY="alt-t"
 
 # File list key
 FL_KEY="alt-f"
