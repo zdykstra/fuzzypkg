@@ -101,7 +101,7 @@ main() {
         --preview-label=" Package Details " \
         --bind "${HP_KEY}:execute-silent[ xbps-query -p homepage -R '{2}' | xargs -Iurl xdg-open url & ]" \
         --bind "${CL_KEY}:execute-silent[ xbps-query -p changelog -R '{2}'| xargs -Iurl xdg-open url & ]" \
-        --bind "${TL_KEY}:execute-silent[ xbps-query -p pkgname -R '{2}' | xargs -I pkgname xdg-open https://github.com/void-linux/void-packages/tree/master/srcpkgs/pkgname & ]" \
+        --bind "${TL_KEY}:execute-silent[ xbps-query -p pkgname -R '{2}' | xargs -Ipkgname xdg-open https://github.com/void-linux/void-packages/tree/master/srcpkgs/pkgname & ]" \
         --bind "${FL_KEY}:execute:
           xbps-query -R -f {2} \
           | ${FUZZYSEL} \
