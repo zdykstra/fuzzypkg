@@ -48,7 +48,11 @@ main() {
 
   CL_KEY="alt-c" ; HP_KEY="alt-h" ; FL_KEY="alt-f"
   EX_KEY="alt-e" ; FP_KEY="alt-p" ; TL_KEY="alt-t"
+  PD_KEY="alt-d"
+
   FILE_PREVIEW=( "bat" "-f" )
+  SHOW_DETAILS="hidden"
+  XQ_BIN="xq"
 
   for config in "${configs[@]}" ; do
     if [ -f "${config}" ] ; then
@@ -58,11 +62,8 @@ main() {
     fi
   done
 
+  [ -z "${HIDE_DETAILS}" ] && SHOW_DETAILS="nohidden"
   [ -z "${HIDE_HEADER}" ] && SHOW_HEADER=1
-
-  if [ -z "${XQ_BIN}" ] ; then
-    XQ_BIN="xq"
-  fi
 
   if command -v fzf > /dev/null 2>&1; then
     FUZZYSEL=fzf
@@ -73,14 +74,16 @@ main() {
     )
     export FZF_DEFAULT_OPTS="${fuzzy_default_options[*]}"
   else
-    echo "Unable to find 'fzf' fuzzy finder"
+    echo "Unable to find 'fzf' fuzzy finder in ${PATH}"
     exit
   fi
 
   HEADER="$( column_wrap "\
 ^:
-^[${FL_KEY^^}] List package contents:[${HP_KEY^^}] Open homepage:[${CL_KEY^^}] Open changelog
-^[ENTER] Add/Remove selected:[${TL_KEY^^}] Open template:[TAB] Toggle selection ")"
+^[${HP_KEY^^}] Open homepage:[${TL_KEY^^}] Open template:[${CL_KEY^^}] Open changelog
+^[${FL_KEY^^}] List package contents::[${PD_KEY^^}] Toggle package details
+^[ENTER] Add/Remove selected::[  TAB] Toggle selection
+")"
 
   FHEADER="$( column_wrap "\
 ^:
@@ -97,8 +100,9 @@ main() {
         --no-separator \
         --border-label=" Available Packages " \
         --preview="${XQ_BIN} {2}" \
-        --preview-window="down:wrap:${PREVIEW_BORDER:-border-sharp}" \
+        --preview-window="down:wrap:${PREVIEW_BORDER:-border-sharp}:${SHOW_DETAILS}" \
         --preview-label=" Package Details " \
+        --bind "${PD_KEY}:toggle-preview" \
         --bind "${HP_KEY}:execute-silent[ xbps-query -p homepage -R '{2}' | xargs -Iurl xdg-open url & ]" \
         --bind "${CL_KEY}:execute-silent[ xbps-query -p changelog -R '{2}'| xargs -Iurl xdg-open url & ]" \
         --bind "${TL_KEY}:execute-silent[ xbps-query -p pkgname -R '{2}' | xargs -Ipkgname xdg-open https://github.com/void-linux/void-packages/tree/master/srcpkgs/pkgname & ]" \
@@ -189,6 +193,9 @@ FP_KEY="alt-p"
 # File extraction key
 EX_KEY="alt-e"
 
+# Show/hide package details
+PD_KEY="alt-d"
+
 # File preview helper - this must be able to detect binary data and NOT display it! 
 FILE_PREVIEW=( "bat" "-f" )
 
@@ -201,8 +208,11 @@ PREVIEW_BORDER="border-top"
 # Hide header that shows keybinds
 HIDE_HEADER=1
 
+# Hide package details by default
+HIDE_DETAILS=1
+
 # Change the location of the 'xq' binary
-XQ_BIN=/bin/xq
+XQ_BIN="/bin/xq"
 
 See 'man fzf' for more keybind documentation.
 
