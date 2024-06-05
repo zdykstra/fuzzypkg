@@ -4,5 +4,5 @@ Name=fuzzypkg
 Exec=env FDELAY=1 fuzzypkg %U
 Type=Application
 Terminal=true
-Icon=x-package-repository
+Icon=package-x-generic
 Categories=System
