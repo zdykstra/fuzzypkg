@@ -91,7 +91,7 @@ main() {
 
   #shellcheck disable=SC2016
   selected="$(
-    xbps-query -R --search= \
+    xbps-query -R --search '' \
     | sed -Er "s/(\[\*\].*)/$( printf "\033[0;32m" )\1$( printf "\033[0m" )/"\
     | "${FUZZYSEL}" \
       ${SHOW_HEADER:+--header="${HEADER}"} \
